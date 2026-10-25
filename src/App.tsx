@@ -42,6 +42,7 @@ import {
   RangoliHalo,
   VermilionSeal,
 } from "@/components/artwork";
+import djCrewArtwork from "@/img/desi-dance-party-dj-crew.webp";
 import { AvatarGuide } from "@/components/avatar-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -262,7 +263,14 @@ function Hero() {
       </motion.div>
 
       <motion.div {...fadeUp(0.14)} className="scene-wrap">
-        <PartyScene className="scene" />
+        <img
+          alt="Friends in vibrant festive outfits dancing around a DJ deck"
+          className="scene"
+          decoding="async"
+          draggable={false}
+          fetchPriority="high"
+          src={djCrewArtwork}
+        />
       </motion.div>
 
       <motion.div {...fadeUp(0.22)} className="event-pill-row">
