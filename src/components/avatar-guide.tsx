@@ -9,15 +9,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import oneeAvatarDefinition from "@/avatars/onee.avatar.json";
 
 const sectionMessages = {
-  home: "Welcome to Ghar Pe: Diwali plans just dropped. Pull up Nov 8 from 7 PM for elite snacks and questionable dance moves.",
-  vibe: "Festive fits, indie and Bollywood bangers, plus a frankly iconic mithai situation. Say less.",
-  night: "Loose plan: snacks at 8, dancing at 9, terrace air later. The schedule is a vibe check, not a court order.",
-  fits: "Festive, not formal. Wear the fit that's been waiting for its main-character moment.",
-  sound: "Indie, Bollywood and throwbacks are on aux. Drop your must-play in the RSVP before someone claims the queue.",
-  photos: "Photo drop opens on party day. In this demo, previews stay in this browser session—no uploads, no plot twist.",
-  details: "The party's in Nashik; the host shares the exact address after RSVP. Under 18? Lock in a ride-home plan with someone you trust.",
-  rsvp: "RSVP reality check: this is a preview only. Your details aren't sent or saved, so the host can't see them yet.",
-  faq: "Tap a question for the tea. Quick answers, zero group-chat archaeology.",
+  home: "Nashik, Nov 8 at 7 PM. Diwali plans just dropped.",
+  vibe: "Festive fits, bangers and elite mithai. Say less.",
+  night: "Snacks at 8, dancing at 9. Timing's a vibe, not law.",
+  fits: "Festive, not formal. Main-character fit? Pull it off.",
+  sound: "Indie, Bollywood, throwbacks. Drop an aux pick.",
+  photos: "Photo previews stay in this browser session. No uploads.",
+  details: "Nashik; exact address after RSVP. Under 18? Plan a safe ride.",
+  rsvp: "RSVP is a preview. Your details aren't sent or saved.",
+  faq: "Tap for the tea. Quick answers, no group-chat archaeology.",
 } as const;
 
 type SectionId = keyof typeof sectionMessages;
@@ -41,6 +41,7 @@ type GuideAnimationKey = GazeAnimationKey | ReactionAnimationKey;
 type Waypoint = { x: number; y: number };
 type Viewport = { width: number; height: number };
 type Rect = { left: number; top: number; right: number; bottom: number };
+const bubbleSize = { width: 188, height: 112, gap: 10 } as const;
 
 const gazeByGrid: Record<string, GazeAnimationKey> = {
   "-1,-1": "gaze-up-left",
@@ -167,9 +168,9 @@ function waypointRects(
 
   if (bubbleOpen) {
     const gutter = 12;
-    const width = Math.min(220, viewport.width - gutter * 2);
-    const height = Math.min(160, viewport.height * 0.35);
-    const gap = 12;
+    const width = Math.min(bubbleSize.width, viewport.width - gutter * 2);
+    const height = Math.min(bubbleSize.height, viewport.height * 0.35);
+    const gap = bubbleSize.gap;
     placement = y - height - gap >= (viewport.width <= 560 ? 124 : 88) ? "top" : "bottom";
     const left = side === "right" ? x + avatarSize - width : x;
     const top = placement === "top" ? y - height - gap : y + avatarSize + gap;
@@ -198,7 +199,7 @@ function findSafeWaypoint(previous: Waypoint, viewport: Viewport, bubbleOpen: bo
     .filter((element) => !element.closest(".avatar-guide") && element.getClientRects().length > 0)
     .map((element) => element.getBoundingClientRect())
     .filter((rect) => rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.left < viewport.width && rect.bottom > 0 && rect.top < viewport.height);
-  const bestArea = Math.max(1, bubbleOpen ? 56 * 56 + 220 * 160 : 56 * 56);
+  const bestArea = Math.max(1, bubbleOpen ? 56 * 56 + bubbleSize.width * bubbleSize.height : 56 * 56);
   let best = randomWaypoint(previous);
   let bestScore = Number.POSITIVE_INFINITY;
 
@@ -226,9 +227,8 @@ function findSafeWaypoint(previous: Waypoint, viewport: Viewport, bubbleOpen: bo
 }
 
 function getClickMessage(element: Element, currentSection: SectionId) {
-  if (element.closest("summary")) return "Tap to open the answer. It's quicker than scrolling the group chat for lore.";
-  if (element.closest(".theme-toggle")) return "New colorway unlocked. Same immaculate plans.";
-  if (element.closest("input, select, textarea")) return "Fill it in at your pace. This RSVP preview doesn't send or save your details.";
+  if (element.closest("summary")) return "Tap to see the tea.";
+  if (element.closest("input, select, textarea")) return "This RSVP preview doesn't send your details.";
 
   const link = element.closest<HTMLAnchorElement>("a[href^='#']");
   if (link) {
@@ -239,7 +239,7 @@ function getClickMessage(element: Element, currentSection: SectionId) {
   const control = element.closest("button, a, [role='button']");
   if (control) {
     const label = (control.getAttribute("aria-label") || control.textContent || "").trim();
-    if (/photo|upload/i.test(label)) return "Photo previews stay in this browser session. No uploads, no plot twist.";
+    if (/photo|upload/i.test(label)) return "Photo previews stay in this browser session. No uploads.";
     if (/rsvp|save my spot|coming/i.test(label)) return sectionMessages.rsvp;
   }
 
@@ -402,7 +402,7 @@ export function AvatarGuide() {
   const x = gutter + availableX * waypoint.x;
   const y = safeTop + availableY * waypoint.y;
   const side = x + 28 >= viewport.width / 2 ? "right" : "left";
-  const placement = y - 172 >= topGap ? "top" : "bottom";
+  const placement = y - bubbleSize.height - bubbleSize.gap >= topGap ? "top" : "bottom";
 
   return (
     <motion.aside

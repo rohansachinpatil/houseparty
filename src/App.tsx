@@ -17,12 +17,10 @@ import {
   Heart,
   LockKeyhole,
   MapPin,
-  Moon,
   Music2,
   Plus,
   Shirt,
   Sparkles,
-  Sun,
   UtensilsCrossed,
   Users,
   X,
@@ -157,22 +155,7 @@ function ScrollProgress() {
   );
 }
 
-function ThemeToggle({ theme, onToggle }: { theme: "light" | "dark"; onToggle: () => void }) {
-  return (
-    <button
-      aria-label={`Switch to ${theme === "light" ? "night" : "day"} colors`}
-      aria-pressed={theme === "dark"}
-      className="theme-toggle"
-      onClick={onToggle}
-      type="button"
-    >
-      {theme === "light" ? <Moon aria-hidden="true" /> : <Sun aria-hidden="true" />}
-      <span>{theme === "light" ? "Night vibe" : "Day vibe"}</span>
-    </button>
-  );
-}
-
-function SiteNav({ theme, onThemeToggle }: { theme: "light" | "dark"; onThemeToggle: () => void }) {
+function SiteNav() {
   return (
     <nav aria-label="Main navigation" className="top-nav">
       <a aria-label="Diwali house party, back to top" className="brand" href="#home">
@@ -185,7 +168,6 @@ function SiteNav({ theme, onThemeToggle }: { theme: "light" | "dark"; onThemeTog
         <a href="#photos">Photo drop</a>
       </div>
       <div className="nav-actions">
-        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
         <Button asChild className="party-btn nav-rsvp" size="sm">
           <a href="#rsvp">RSVP <ArrowRight aria-hidden="true" className="h-4 w-4" /></a>
         </Button>
@@ -214,7 +196,7 @@ function Countdown() {
 
   return (
     <div aria-label="Countdown to the party" className="countdown" role="timer">
-      <p className="countdown-label">The function starts in</p>
+      <p className="countdown-label">Party starts in</p>
       <div className="countdown-grid">
         {values.map(([unit, value]) => (
           <div className="countdown-unit" key={unit}>
@@ -269,7 +251,9 @@ function Hero() {
           decoding="async"
           draggable={false}
           fetchPriority="high"
+          height={759}
           src={djCrewArtwork}
+          width={2072}
         />
       </motion.div>
 
@@ -703,20 +687,12 @@ function SiteFooter() {
 }
 
 export default function App() {
-  const [theme, setTheme] = useState<"light" | "dark">(() =>
-    window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-  );
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-
   return (
     <MotionConfig reducedMotion="user">
       <>
         <div className="site-frame">
           <ScrollProgress />
-          <SiteNav theme={theme} onThemeToggle={() => setTheme((current) => current === "light" ? "dark" : "light")} />
+          <SiteNav />
           <main>
             <Hero />
             <IntroSection />
