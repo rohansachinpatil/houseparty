@@ -2067,8 +2067,22 @@ svg {
   }
 
   .avatar-guide-bubble {
-    width: min(188px, calc(100vw - 24px));
-    padding: 7px 9px 8px;
+    bottom: calc(100% + 8px);
+    width: min(156px, calc(100vw - 24px));
+    padding: 6px 8px 7px;
+  }
+
+  .avatar-guide[data-placement="bottom"] .avatar-guide-bubble {
+    top: calc(100% + 8px);
+  }
+
+  .avatar-guide-caption {
+    font-size: 0.58rem;
+  }
+
+  .avatar-guide-bubble p {
+    font-size: 0.68rem;
+    line-height: 1.24;
   }
 
   .avatar-guide-button {

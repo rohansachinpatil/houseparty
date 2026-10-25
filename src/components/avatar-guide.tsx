@@ -41,7 +41,8 @@ type GuideAnimationKey = GazeAnimationKey | ReactionAnimationKey;
 type Waypoint = { x: number; y: number };
 type Viewport = { width: number; height: number };
 type Rect = { left: number; top: number; right: number; bottom: number };
-const bubbleSize = { width: 188, height: 112, gap: 10 } as const;
+const desktopBubbleSize = { width: 188, height: 112, gap: 10 } as const;
+const mobileBubbleSize = { width: 156, height: 90, gap: 8 } as const;
 
 const gazeByGrid: Record<string, GazeAnimationKey> = {
   "-1,-1": "gaze-up-left",
@@ -153,6 +154,14 @@ function randomWaypoint(previous?: Waypoint): Waypoint {
   return next;
 }
 
+function getBubbleSize(viewport: Viewport) {
+  return viewport.width <= 560 ? mobileBubbleSize : desktopBubbleSize;
+}
+
+function getInitialWaypoint(viewport: Viewport): Waypoint {
+  return viewport.width <= 560 ? { x: 0.9, y: 0.9 } : randomWaypoint();
+}
+
 function waypointRects(
   x: number,
   y: number,
@@ -167,6 +176,7 @@ function waypointRects(
   const side = x + avatarSize / 2 >= viewport.width / 2 ? "right" : "left";
 
   if (bubbleOpen) {
+    const bubbleSize = getBubbleSize(viewport);
     const gutter = 12;
     const width = Math.min(bubbleSize.width, viewport.width - gutter * 2);
     const height = Math.min(bubbleSize.height, viewport.height * 0.35);
@@ -190,6 +200,7 @@ function waypointRects(
 function findSafeWaypoint(previous: Waypoint, viewport: Viewport, bubbleOpen: boolean): Waypoint {
   const avatarSize = 56;
   const gutter = 12;
+  const bubbleSize = getBubbleSize(viewport);
   const topGap = viewport.width <= 560 ? 124 : 88;
   const maxY = Math.max(gutter, viewport.height - avatarSize - gutter);
   const safeTop = Math.min(topGap, maxY);
@@ -200,7 +211,10 @@ function findSafeWaypoint(previous: Waypoint, viewport: Viewport, bubbleOpen: bo
     .map((element) => element.getBoundingClientRect())
     .filter((rect) => rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.left < viewport.width && rect.bottom > 0 && rect.top < viewport.height);
   const bestArea = Math.max(1, bubbleOpen ? 56 * 56 + bubbleSize.width * bubbleSize.height : 56 * 56);
-  let best = randomWaypoint(previous);
+  const heroHeading = viewport.width <= 560
+    ? document.querySelector<HTMLElement>(".hero-copy h1")?.getBoundingClientRect()
+    : undefined;
+  let best = viewport.width <= 560 ? getInitialWaypoint(viewport) : randomWaypoint(previous);
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (let attempt = 0; attempt < 96; attempt += 1) {
@@ -208,6 +222,12 @@ function findSafeWaypoint(previous: Waypoint, viewport: Viewport, bubbleOpen: bo
     const x = gutter + availableX * candidate.x;
     const y = safeTop + availableY * candidate.y;
     const { rects, outsideArea } = waypointRects(x, y, viewport, bubbleOpen);
+    const overlapsHeroHeading = heroHeading && rects.some((moving) =>
+      Math.min(moving.right, heroHeading.right) > Math.max(moving.left, heroHeading.left) &&
+      Math.min(moving.bottom, heroHeading.bottom) > Math.max(moving.top, heroHeading.top),
+    );
+    if (overlapsHeroHeading) continue;
+
     const overlapArea = rects.reduce((total, moving) => total + obstacles.reduce((area, obstacle) => {
       const width = Math.max(0, Math.min(moving.right, obstacle.right) - Math.max(moving.left, obstacle.left));
       const height = Math.max(0, Math.min(moving.bottom, obstacle.bottom) - Math.max(moving.top, obstacle.top));
@@ -252,7 +272,7 @@ export function AvatarGuide() {
   const currentSectionRef = useRef<SectionId>("home");
   const [viewport, setViewport] = useState<Viewport>(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const viewportRef = useRef(viewport);
-  const [waypoint, setWaypoint] = useState<Waypoint>(() => randomWaypoint());
+  const [waypoint, setWaypoint] = useState<Waypoint>(() => getInitialWaypoint(viewport));
   const waypointRef = useRef(waypoint);
   const [message, setMessage] = useState<string>(sectionMessages.home);
   const [isBubbleOpen, setIsBubbleOpen] = useState(false);
@@ -402,6 +422,7 @@ export function AvatarGuide() {
   const x = gutter + availableX * waypoint.x;
   const y = safeTop + availableY * waypoint.y;
   const side = x + 28 >= viewport.width / 2 ? "right" : "left";
+  const bubbleSize = getBubbleSize(viewport);
   const placement = y - bubbleSize.height - bubbleSize.gap >= topGap ? "top" : "bottom";
 
   return (
